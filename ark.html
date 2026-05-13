@@ -403,6 +403,23 @@
             .btn { padding: 10px 30px; font-size: 12px; }
             #mobilePauseBtn { display: block; }
             .boss-health { width: 200px; }
+            #startScreen, #gameOverScreen, #winScreen, #menuScreen, #pauseScreen {
+                position: fixed;
+                padding: 15px;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .menu-title { font-size: 28px; margin-bottom: 5px; }
+            .menu-subtitle { font-size: 9px; margin-bottom: 15px; letter-spacing: 4px; }
+            .menu-options { gap: 8px; margin: 10px 0; }
+            .controls-info { flex-wrap: wrap; justify-content: center; margin: 10px 0; }
+            .powerup-legend { margin-top: 10px; }
+            .records-section { margin-top: 10px; }
+            .records-list { max-height: 80px; width: 90%; }
+            #menuScreen h2, #startScreen h2, #gameOverScreen h2, #winScreen h2, #pauseScreen h2 {
+                font-size: 20px;
+                margin-bottom: 10px;
+            }
         }
         #mobilePauseBtn {
             display: none;
