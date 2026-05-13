@@ -405,6 +405,33 @@
             background: linear-gradient(90deg, #ff3333, #ff6666);
             transition: width 0.3s;
         }
+        @media (max-width: 600px) {
+            body { padding: 5px; }
+            .title-container { margin-bottom: 5px; }
+            h1 { font-size: 18px; letter-spacing: 4px; }
+            .subtitle { font-size: 8px; }
+            #gameContainer { max-width: 100%; border-width: 2px; }
+            .controls-info { gap: 10px; }
+            .controls-info span { padding: 5px 8px; font-size: 8px; }
+            .btn { padding: 10px 30px; font-size: 12px; }
+            #mobilePauseBtn { display: block; }
+            .boss-health { width: 200px; }
+        }
+        #mobilePauseBtn {
+            display: none;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 200;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #00f0ff;
+            border-radius: 8px;
+            color: #00f0ff;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -481,9 +508,12 @@
             <h2>⏸ PAUSED</h2>
             <p style="color: #666; margin-top: 20px;">Press P to resume</p>
             <button class="btn" id="resumeBtn" style="margin-top: 20px;">RESUME</button>
+            <button class="btn" id="restartBtn" style="margin-top: 10px;">RESTART</button>
+            <button class="btn btn-danger" id="pauseMenuBtn" style="margin-top: 10px;">MENU</button>
         </div>
     </div>
     <button id="audioBtn">🔊 ON</button>
+    <button id="mobilePauseBtn">⏸</button>
 
     <script>
     const canvas = document.getElementById('gameCanvas');
@@ -546,6 +576,30 @@
     try { highScores = JSON.parse(localStorage.getItem('arkHighScores')) || []; } catch(e) {}
     
     const keys = { left: false, right: false };
+    let speedScale = 1;
+    let lastFrameTime = 0;
+    
+    function resizeCanvas() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const isMobile = vw <= 600;
+        const pad = isMobile ? 5 : 15;
+        const titleH = isMobile ? 60 : 120;
+        const maxW = vw - pad * 2;
+        const maxH = vh - pad * 2 - titleH;
+        if (maxW <= 0 || maxH <= 0) return;
+        const aspect = CANVAS_WIDTH / CANVAS_HEIGHT;
+        let w, h;
+        if (maxW / maxH > aspect) {
+            h = maxH;
+            w = h * aspect;
+        } else {
+            w = maxW;
+            h = w / aspect;
+        }
+        canvas.style.width = Math.floor(w) + 'px';
+        canvas.style.height = Math.floor(h) + 'px';
+    }
     
     if (!CanvasRenderingContext2D.prototype.roundRect) {
         CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
@@ -862,8 +916,8 @@
     }
     
     function movePaddle() {
-        if (keys.left && paddle.x > 0) paddle.x -= paddle.speed;
-        if (keys.right && paddle.x < CANVAS_WIDTH - paddle.width) paddle.x += paddle.speed;
+        if (keys.left && paddle.x > 0) paddle.x -= paddle.speed * speedScale;
+        if (keys.right && paddle.x < CANVAS_WIDTH - paddle.width) paddle.x += paddle.speed * speedScale;
         
         balls.forEach(ball => {
             if (!ball.launched) {
@@ -874,7 +928,7 @@
         
         ['expand', 'laser', 'glue', 'slow', 'break'].forEach(effect => {
             if (paddle.effects[effect] > 0) {
-                paddle.effects[effect] -= 16;
+                paddle.effects[effect] -= 16 * speedScale;
                 if (paddle.effects[effect] <= 0) {
                     if (effect === 'expand') paddle.width = paddle.baseWidth;
                     if (effect === 'break') balls.forEach(b => b.breakPower = false);
@@ -892,8 +946,8 @@
             if (!ball.launched) return;
             
             const speedMult = paddle.effects.slow > 0 ? 0.5 : 1;
-            ball.x += ball.dx * speedMult;
-            ball.y += ball.dy * speedMult;
+            ball.x += ball.dx * speedMult * speedScale;
+            ball.y += ball.dy * speedMult * speedScale;
             
             if (ball.x - ball.radius < 0 || ball.x + ball.radius > CANVAS_WIDTH) {
                 ball.dx = -ball.dx;
@@ -981,7 +1035,7 @@
     
     function updateLasers() {
         laserBeams.forEach(laser => {
-            laser.y += laser.dy;
+            laser.y += laser.dy * speedScale;
             
             bricks.forEach(brick => {
                 if (!brick.alive) return;
@@ -1141,7 +1195,7 @@
     function movePowerups() {
         powerups.forEach(p => {
             if (!p.active) return;
-            p.y += p.dy;
+            p.y += p.dy * speedScale;
             
             if (p.y > CANVAS_HEIGHT + 20) {
                 p.active = false;
@@ -1160,7 +1214,7 @@
     function updateBoss() {
         if (!boss || !boss.alive) return;
         
-        boss.x += boss.dx * boss.speed;
+        boss.x += boss.dx * boss.speed * speedScale;
         
         if (boss.x <= 0 || boss.x + boss.width >= CANVAS_WIDTH) {
             boss.dx = -boss.dx;
@@ -1422,8 +1476,17 @@
         return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
     }
     
-    function gameLoop() {
+    function gameLoop(timestamp) {
         if (gameState === 'playing' && !paused) {
+            if (lastFrameTime === 0) {
+                lastFrameTime = timestamp;
+                speedScale = 1;
+            } else {
+                const delta = timestamp - lastFrameTime;
+                lastFrameTime = timestamp;
+                speedScale = Math.min(delta / 16.667, 3);
+            }
+            
             movePaddle();
             moveBalls();
             updateLasers();
@@ -1432,11 +1495,13 @@
             updateBoss();
             
             if (comboTimer > 0) {
-                comboTimer -= 16;
+                comboTimer -= 16 * speedScale;
                 if (comboTimer <= 0) comboCount = 0;
             }
             
             draw();
+        } else {
+            lastFrameTime = 0;
         }
         requestAnimationFrame(gameLoop);
     }
@@ -1448,6 +1513,7 @@
         currentPlayer = 1;
         gameState = 'playing';
         paused = false;
+        lastFrameTime = 0;
         
         document.getElementById('menuScreen').classList.add('hidden');
         document.getElementById('gameOverScreen').classList.add('hidden');
@@ -1484,6 +1550,23 @@
         document.getElementById('menuScreen').classList.remove('hidden');
         gameState = 'menu';
         stopMusic();
+    });
+    
+    document.getElementById('restartBtn').addEventListener('click', () => startGame(players, hardMode));
+    
+    document.getElementById('pauseMenuBtn').addEventListener('click', () => {
+        paused = false;
+        document.getElementById('pauseScreen').classList.add('hidden');
+        document.getElementById('menuScreen').classList.remove('hidden');
+        gameState = 'menu';
+        stopMusic();
+    });
+    
+    document.getElementById('mobilePauseBtn').addEventListener('click', () => {
+        if (gameState === 'playing') {
+            paused = !paused;
+            document.getElementById('pauseScreen').classList.toggle('hidden', !paused);
+        }
     });
     
     canvas.addEventListener('mousemove', e => {
@@ -1525,14 +1608,16 @@
         if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
     });
     
-    canvas.addEventListener('touchstart', e => {
-        e.preventDefault();
+    document.addEventListener('touchstart', e => {
         if (gameState === 'playing' && !paused) {
-            balls.forEach(ball => { if (!ball.launched) ball.launched = true; });
+            if (!e.target.closest('button')) {
+                balls.forEach(ball => { if (!ball.launched) ball.launched = true; });
+            }
         }
     }, { passive: false });
     
-    canvas.addEventListener('touchmove', e => {
+    document.addEventListener('touchmove', e => {
+        if (gameState !== 'playing') return;
         e.preventDefault();
         const rect = canvas.getBoundingClientRect();
         const scale = CANVAS_WIDTH / rect.width;
@@ -1545,6 +1630,8 @@
     
     updateRecords();
     createLevel(1);
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
     draw();
     gameLoop();
     </script>
