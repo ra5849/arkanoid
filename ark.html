@@ -72,19 +72,6 @@
             background: linear-gradient(180deg, #050510 0%, #0a0a20 30%, #050515 100%);
         }
         
-        .scanlines {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0, 0, 0, 0.1) 2px,
-                rgba(0, 0, 0, 0.1) 4px
-            );
-            pointer-events: none;
-            z-index: 100;
-        }
         
         #ui {
             position: absolute;
@@ -457,7 +444,6 @@
     </div>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="1000" height="700"></canvas>
-        <div class="scanlines"></div>
         <div class="boss-health"><div class="boss-health-bar" id="bossHealthBar"></div></div>
         
         <div id="ui">
