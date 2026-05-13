@@ -596,6 +596,60 @@
     let highScores = [];
     try { highScores = JSON.parse(localStorage.getItem('arkHighScores')) || []; } catch(e) {}
     
+    const GITHUB_OWNER = 'ra5849';
+    const GITHUB_REPO = 'arkanoid';
+    const SCORES_FILE = 'scores.json';
+    const GITHUB_TOKEN = ''; // Pon aquí tu fine-grained token
+    let scoresSha = null;
+    
+    function utf8ToB64(str) {
+        const bytes = new TextEncoder().encode(str);
+        let bin = '';
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin);
+    }
+    
+    function b64ToUtf8(b64) {
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new TextDecoder().decode(bytes);
+    }
+    
+    async function loadGitHubScores() {
+        try {
+            const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${SCORES_FILE}`);
+            if (res.ok) {
+                const data = await res.json();
+                scoresSha = data.sha;
+                return JSON.parse(b64ToUtf8(data.content));
+            }
+        } catch(e) {}
+        return null;
+    }
+    
+    async function saveGitHubScores(scores) {
+        try {
+            const body = {
+                message: 'update scores',
+                content: utf8ToB64(JSON.stringify(scores))
+            };
+            if (scoresSha) body.sha = scoresSha;
+            const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${SCORES_FILE}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+            if (res.ok) {
+                const data = await res.json();
+                scoresSha = data.content.sha;
+            }
+        } catch(e) {}
+    }
+    
     const keys = { left: false, right: false };
     let speedScale = 1;
     let lastFrameTime = 0;
@@ -1305,6 +1359,7 @@
         highScores.sort((a, b) => b.score - a.score);
         highScores = highScores.slice(0, 10);
         try { localStorage.setItem('arkHighScores', JSON.stringify(highScores)); } catch(e) {}
+        if (GITHUB_TOKEN) saveGitHubScores(highScores);
         updateRecords();
     }
     
@@ -1662,6 +1717,16 @@
     window.addEventListener('resize', resizeCanvas);
     draw();
     gameLoop();
+    
+    if (GITHUB_TOKEN) {
+        loadGitHubScores().then(ghScores => {
+            if (ghScores && ghScores.length > 0) {
+                highScores = ghScores;
+                try { localStorage.setItem('arkHighScores', JSON.stringify(highScores)); } catch(e) {}
+                updateRecords();
+            }
+        });
+    }
     </script>
 </body>
 </html>
