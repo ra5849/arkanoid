@@ -64,19 +64,6 @@
             overflow: hidden;
         }
         
-        #gameContainer::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, transparent, #00f0ff, transparent);
-            animation: scanline 3s linear infinite;
-        }
-        
-        @keyframes scanline {
-            0% { top: 0; }
-            100% { top: 100%; }
-        }
-        
         canvas {
             display: block;
             max-width: 100%;
@@ -432,6 +419,18 @@
             color: #00f0ff;
             cursor: pointer;
         }
+        .powerup-legend {
+            margin-top: 15px;
+            font-size: 9px;
+            color: #666;
+            line-height: 1.8;
+        }
+        .powerup-legend .title {
+            color: #00f0ff;
+            letter-spacing: 4px;
+            font-size: 10px;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -481,6 +480,11 @@
                 <span>SPACE LAUNCH</span>
                 <span>M MUSIC</span>
                 <span>P PAUSE</span>
+            </div>
+            <div class="powerup-legend">
+                <div class="title">POWERUPS</div>
+                <div>⬜ Paddle+ &nbsp; 🔥 Laser &nbsp; 🟣 Glue &nbsp; 🐢 Slow</div>
+                <div>⚪ Ball+ &nbsp; ❤️ Life &nbsp; 💪 Break</div>
             </div>
             <div class="records-section">
                 <div class="records-title">🏆 HIGH SCORES</div>
@@ -655,9 +659,16 @@
         if (!audioCtx || !musicEnabled || musicInterval) return;
         
         const melody = hardMode ? 
-            [261, 293, 329, 349, 392, 440, 392, 349, 329, 293, 261, 220, 196, 220, 247, 261] :
-            [196, 220, 247, 261, 293, 330, 349, 330, 293, 261, 247, 220, 196, 220, 247, 294];
+            [261, 277, 294, 311, 330, 349, 370, 392, 370, 349, 330, 311, 294, 277, 261, 247,
+             233, 220, 208, 196, 208, 220, 233, 247, 261, 277, 294, 311, 330, 349, 370, 392,
+             415, 440, 466, 494, 466, 440, 415, 392, 370, 349, 330, 311, 294, 277, 261, 247,
+             261, 294, 330, 349, 392, 440, 523, 440, 392, 349, 330, 294, 261, 247, 233, 220] :
+            [196, 208, 220, 233, 247, 262, 277, 294, 277, 262, 247, 233, 220, 208, 196, 185,
+             175, 165, 156, 147, 156, 165, 175, 185, 196, 208, 220, 233, 247, 262, 277, 294,
+             311, 330, 349, 370, 349, 330, 311, 294, 277, 262, 247, 233, 220, 208, 196, 185,
+             196, 220, 247, 262, 294, 330, 392, 330, 294, 262, 247, 220, 196, 185, 175, 165];
         
+        const noteLen = hardMode ? 0.3 : 0.4;
         musicInterval = setInterval(() => {
             if (!musicEnabled || gameState !== 'playing' || paused) return;
             const freq = melody[currentMusicNote % melody.length];
@@ -666,13 +677,13 @@
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
             gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + noteLen);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.35);
+            osc.stop(audioCtx.currentTime + noteLen);
             currentMusicNote++;
-        }, hardMode ? 300 : 400);
+        }, hardMode ? 350 : 450);
     }
     
     function stopMusic() {
