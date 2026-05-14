@@ -1623,7 +1623,7 @@
             } else {
                 const delta = timestamp - lastFrameTime;
                 lastFrameTime = timestamp;
-                speedScale = Math.min(delta / 16.667, 3);
+                speedScale = Math.min(delta / 16.667, 10);
             }
             
             movePaddle();
