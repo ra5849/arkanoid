@@ -360,10 +360,10 @@
         }
         
         #audioPanel {
-            position: absolute;
+            position: fixed;
             top: 10px;
             right: 10px;
-            z-index: 100;
+            z-index: 300;
             display: flex;
             gap: 6px;
         }
@@ -511,11 +511,6 @@
         <div id="levelPopup">LEVEL 1</div>
         <div id="bossWarning">⚠ BOSS APPROACHING ⚠</div>
         
-        <div id="audioPanel">
-            <button id="musicBtn" class="audio-btn active" title="Music (M)">🎵</button>
-            <button id="sfxBtn" class="audio-btn active" title="Sound (S)">🔊</button>
-        </div>
-        
         <div id="menuScreen">
             <div class="menu-title">🎮 ARKANOID</div>
             <div class="menu-subtitle">TAITO 1986 REMASTERED</div>
@@ -565,6 +560,10 @@
             <button class="btn" id="restartBtn" style="margin-top: 10px;">RESTART</button>
             <button class="btn btn-danger" id="pauseMenuBtn" style="margin-top: 10px;">MENU</button>
         </div>
+    </div>
+    <div id="audioPanel">
+        <button id="musicBtn" class="audio-btn active" title="Music (M)">🎵</button>
+        <button id="sfxBtn" class="audio-btn active" title="Sound (S)">🔊</button>
     </div>
     <button id="mobilePauseBtn">⏸</button>
 
