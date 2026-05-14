@@ -531,7 +531,6 @@
     
     let IS_MOBILE = window.innerWidth <= 600;
     let renderScale = IS_MOBILE ? 0.35 : 1;
-    let frameSkip = 1;
     canvas.width = CANVAS_WIDTH * renderScale;
     canvas.height = CANVAS_HEIGHT * renderScale;
     
@@ -1401,21 +1400,24 @@
             if (brick.isSilver && brick.hits < brick.maxHits) color = '#888888';
             if (brick.isGold && brick.hits < brick.maxHits) color = '#ccaa00';
             
-            const grad = ctx.createLinearGradient(brick.x, brick.y, brick.x, brick.y + brick.height);
-            grad.addColorStop(0, color);
-            grad.addColorStop(1, shadeColor(color, -40));
-            
-            ctx.fillStyle = grad;
-            if(!IS_MOBILE)ctx.shadowColor = color;
-            if(!IS_MOBILE)ctx.shadowBlur = 5;
-            ctx.beginPath();
-            ctx.roundRect(brick.x, brick.y, brick.width, brick.height, 3);
-            ctx.fill();
-            
-            ctx.strokeStyle = shadeColor(color, -60);
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            if(!IS_MOBILE)ctx.shadowBlur = 0;
+            if (IS_MOBILE) {
+                ctx.fillStyle = color;
+                ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+            } else {
+                const grad = ctx.createLinearGradient(brick.x, brick.y, brick.x, brick.y + brick.height);
+                grad.addColorStop(0, color);
+                grad.addColorStop(1, shadeColor(color, -40));
+                ctx.fillStyle = grad;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 5;
+                ctx.beginPath();
+                ctx.roundRect(brick.x, brick.y, brick.width, brick.height, 3);
+                ctx.fill();
+                ctx.strokeStyle = shadeColor(color, -60);
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
             
             if (brick.maxHits > 1) {
                 ctx.fillStyle = 'rgba(255,255,255,0.2)';
@@ -1426,48 +1428,49 @@
         });
         
         if (boss && boss.alive) {
-            const bossGrad = ctx.createLinearGradient(boss.x, boss.y, boss.x, boss.y + boss.height);
-            bossGrad.addColorStop(0, '#ff3333');
-            bossGrad.addColorStop(0.5, '#cc0000');
-            bossGrad.addColorStop(1, '#880000');
-            
-            ctx.fillStyle = bossGrad;
-            if(!IS_MOBILE)ctx.shadowColor = '#ff3333';
-            if(!IS_MOBILE)ctx.shadowBlur = 20;
-            ctx.beginPath();
-            ctx.roundRect(boss.x, boss.y, boss.width, boss.height, 8);
-            ctx.fill();
-            
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 24px Orbitron';
-            ctx.textAlign = 'center';
-            ctx.fillText('😈', boss.x + boss.width/2, boss.y + boss.height/2 + 8);
-            if(!IS_MOBILE)ctx.shadowBlur = 0;
+            if (IS_MOBILE) {
+                ctx.fillStyle = '#cc0000';
+                ctx.fillRect(boss.x, boss.y, boss.width, boss.height);
+            } else {
+                const bossGrad = ctx.createLinearGradient(boss.x, boss.y, boss.x, boss.y + boss.height);
+                bossGrad.addColorStop(0, '#ff3333');
+                bossGrad.addColorStop(0.5, '#cc0000');
+                bossGrad.addColorStop(1, '#880000');
+                ctx.fillStyle = bossGrad;
+                ctx.shadowColor = '#ff3333';
+                ctx.shadowBlur = 20;
+                ctx.beginPath();
+                ctx.roundRect(boss.x, boss.y, boss.width, boss.height, 8);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 24px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.fillText('😈', boss.x + boss.width/2, boss.y + boss.height/2 + 8);
+                ctx.shadowBlur = 0;
+            }
         }
         
         powerups.forEach(p => {
             if (!p.active) return;
-            
             ctx.fillStyle = p.color;
-            if(!IS_MOBILE)ctx.shadowColor = p.color;
-            if(!IS_MOBILE)ctx.shadowBlur = 15;
             ctx.beginPath();
             ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
             ctx.fill();
-            
-            ctx.fillStyle = '#fff';
-            ctx.font = '12px Orbitron';
-            ctx.textAlign = 'center';
-            ctx.fillText(p.icon, p.x, p.y + 4);
-            if(!IS_MOBILE)ctx.shadowBlur = 0;
+            if (!IS_MOBILE) {
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 15;
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.fillText(p.icon, p.x, p.y + 4);
+                ctx.shadowBlur = 0;
+            }
         });
         
         laserBeams.forEach(laser => {
             ctx.fillStyle = '#ff3333';
-            if(!IS_MOBILE)ctx.shadowColor = '#ff6666';
-            if(!IS_MOBILE)ctx.shadowBlur = 10;
             ctx.fillRect(laser.x, laser.y, laser.width, laser.height);
-            if(!IS_MOBILE)ctx.shadowBlur = 0;
         });
         
         let paddleColor = '#00f0ff';
@@ -1475,73 +1478,82 @@
         else if (paddle.effects.glue > 0) paddleColor = '#ff00ff';
         else if (paddle.effects.break > 0) paddleColor = '#ff8800';
         
-        const paddleGrad = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y + paddle.height);
-        paddleGrad.addColorStop(0, paddleColor);
-        paddleGrad.addColorStop(0.5, shadeColor(paddleColor, -30));
-        paddleGrad.addColorStop(1, shadeColor(paddleColor, -60));
-        
-        ctx.fillStyle = paddleGrad;
-        if(!IS_MOBILE)ctx.shadowColor = paddleColor;
-        if(!IS_MOBILE)ctx.shadowBlur = paddle.effects.expand > 0 ? 25 : 15;
-        ctx.beginPath();
-        ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 3);
-        ctx.fill();
-        
-        if(!IS_MOBILE)ctx.shadowBlur = 0;
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.fillRect(paddle.x + 5, paddle.y + 2, paddle.width - 10, 3);
-        
-        if (paddle.effects.glue > 0) {
-            ctx.fillStyle = '#ff00ff';
-            if(!IS_MOBILE)ctx.shadowColor = '#ff00ff';
-            if(!IS_MOBILE)ctx.shadowBlur = 8;
-            ctx.fillRect(paddle.x + 8, paddle.y + paddle.height - 3, paddle.width - 16, 3);
-            if(!IS_MOBILE)ctx.shadowBlur = 0;
+        if (IS_MOBILE) {
+            ctx.fillStyle = paddleColor;
+            ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+        } else {
+            const paddleGrad = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y + paddle.height);
+            paddleGrad.addColorStop(0, paddleColor);
+            paddleGrad.addColorStop(0.5, shadeColor(paddleColor, -30));
+            paddleGrad.addColorStop(1, shadeColor(paddleColor, -60));
+            ctx.fillStyle = paddleGrad;
+            ctx.shadowColor = paddleColor;
+            ctx.shadowBlur = paddle.effects.expand > 0 ? 25 : 15;
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 3);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillRect(paddle.x + 5, paddle.y + 2, paddle.width - 10, 3);
+            if (paddle.effects.glue > 0) {
+                ctx.fillStyle = '#ff00ff';
+                ctx.shadowColor = '#ff00ff';
+                ctx.shadowBlur = 8;
+                ctx.fillRect(paddle.x + 8, paddle.y + paddle.height - 3, paddle.width - 16, 3);
+                ctx.shadowBlur = 0;
+            }
         }
         
         balls.forEach(ball => {
             if (!ball.active) return;
             
-            const ballGrad = ctx.createRadialGradient(ball.x - 2, ball.y - 2, 0, ball.x, ball.y, ball.radius);
-            ballGrad.addColorStop(0, '#ffffff');
-            ballGrad.addColorStop(0.6, '#00f0ff');
-            ballGrad.addColorStop(1, '#0088aa');
-            
-            ctx.fillStyle = ballGrad;
-            if(!IS_MOBILE)ctx.shadowColor = '#00f0ff';
-            if(!IS_MOBILE)ctx.shadowBlur = 15;
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fill();
-            
-            if (ball.breakPower) {
-                ctx.strokeStyle = '#ff8800';
-                ctx.lineWidth = 2;
+            if (IS_MOBILE) {
+                ctx.fillStyle = '#00f0ff';
                 ctx.beginPath();
-                ctx.arc(ball.x, ball.y, ball.radius + 3, 0, Math.PI * 2);
-                ctx.stroke();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                const ballGrad = ctx.createRadialGradient(ball.x - 2, ball.y - 2, 0, ball.x, ball.y, ball.radius);
+                ballGrad.addColorStop(0, '#ffffff');
+                ballGrad.addColorStop(0.6, '#00f0ff');
+                ballGrad.addColorStop(1, '#0088aa');
+                ctx.fillStyle = ballGrad;
+                ctx.shadowColor = '#00f0ff';
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fill();
+                if (ball.breakPower) {
+                    ctx.strokeStyle = '#ff8800';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(ball.x, ball.y, ball.radius + 3, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                ctx.shadowBlur = 0;
             }
-            if(!IS_MOBILE)ctx.shadowBlur = 0;
         });
         
-        particles = particles.filter(p => {
-            p.x += p.dx;
-            p.y += p.dy;
-            p.dy += 0.15;
-            p.life -= p.decay;
-            
-            if (p.life <= 0) return false;
-            
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = p.life;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-            return true;
-        });
+        if (!IS_MOBILE) {
+            particles = particles.filter(p => {
+                p.x += p.dx;
+                p.y += p.dy;
+                p.dy += 0.15;
+                p.life -= p.decay;
+                
+                if (p.life <= 0) return false;
+                
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                return true;
+            });
+        }
         
-        if (screenFlash > 0) {
+        if (screenFlash > 0 && !IS_MOBILE) {
             ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash / 20})`;
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             screenFlash--;
@@ -1561,14 +1573,6 @@
     
     function gameLoop(timestamp) {
         if (gameState === 'playing' && !paused) {
-            if (IS_MOBILE) {
-                frameSkip = 1 - frameSkip;
-                if (frameSkip === 0) {
-                    lastFrameTime = 0;
-                    requestAnimationFrame(gameLoop);
-                    return;
-                }
-            }
             if (lastFrameTime === 0) {
                 lastFrameTime = timestamp;
                 speedScale = 1;
