@@ -359,22 +359,36 @@
             z-index: 200;
         }
         
-        #audioBtn:hover { border-color: #00f0ff; }
-        #sfxBtn {
-            position: fixed;
-            top: 60px;
-            right: 15px;
-            padding: 10px 15px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #444;
-            border-radius: 4px;
-            color: #00f0ff;
-            cursor: pointer;
-            z-index: 200;
+        #audioPanel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 30;
+            display: flex;
+            gap: 6px;
         }
-        #sfxBtn:hover { border-color: #00f0ff; }
+        .audio-btn {
+            width: 38px;
+            height: 38px;
+            font-size: 18px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #555;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+        .audio-btn.active {
+            border-color: #00f0ff;
+            box-shadow: 0 0 8px rgba(0,240,255,0.3);
+        }
+        .audio-btn.muted {
+            opacity: 0.4;
+        }
         
         .boss-health {
             position: absolute;
@@ -497,6 +511,11 @@
         <div id="levelPopup">LEVEL 1</div>
         <div id="bossWarning">⚠ BOSS APPROACHING ⚠</div>
         
+        <div id="audioPanel">
+            <button id="musicBtn" class="audio-btn active" title="Music (M)">🎵</button>
+            <button id="sfxBtn" class="audio-btn active" title="Sound (S)">🔊</button>
+        </div>
+        
         <div id="menuScreen">
             <div class="menu-title">🎮 ARKANOID</div>
             <div class="menu-subtitle">TAITO 1986 REMASTERED</div>
@@ -547,8 +566,6 @@
             <button class="btn btn-danger" id="pauseMenuBtn" style="margin-top: 10px;">MENU</button>
         </div>
     </div>
-    <button id="audioBtn" title="Music">🎵 ON</button>
-    <button id="sfxBtn" title="Sound effects">🔊 ON</button>
     <button id="mobilePauseBtn">⏸</button>
 
     <script>
@@ -566,8 +583,7 @@
     let audioCtx = null;
     let musicEnabled = !IS_MOBILE;
     let sfxEnabled = true;
-    document.getElementById('audioBtn').textContent = musicEnabled ? '🎵 ON' : '🎵 OFF';
-    document.getElementById('sfxBtn').textContent = sfxEnabled ? '🔊 ON' : '🔊 OFF';
+    if (!musicEnabled) document.getElementById('musicBtn').classList.replace('active', 'muted');
     let musicInterval = null;
     let currentMusicNote = 0;
     let hardMode = false;
@@ -816,17 +832,19 @@
         if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
     }
     
-    document.getElementById('audioBtn').addEventListener('click', () => {
+    document.getElementById('musicBtn').addEventListener('click', () => {
         initAudio();
         musicEnabled = !musicEnabled;
-        document.getElementById('audioBtn').textContent = musicEnabled ? '🎵 ON' : '🎵 OFF';
+        document.getElementById('musicBtn').classList.toggle('active');
+        document.getElementById('musicBtn').classList.toggle('muted');
         if (musicEnabled && gameState === 'playing') startMusic();
         else stopMusic();
     });
     
     document.getElementById('sfxBtn').addEventListener('click', () => {
         sfxEnabled = !sfxEnabled;
-        document.getElementById('sfxBtn').textContent = sfxEnabled ? '🔊 ON' : '🔊 OFF';
+        document.getElementById('sfxBtn').classList.toggle('active');
+        document.getElementById('sfxBtn').classList.toggle('muted');
     });
     
     const brickColors = {
@@ -1730,15 +1748,10 @@
             }
         }
         if (e.key === 'm' || e.key === 'M') {
-            initAudio();
-            musicEnabled = !musicEnabled;
-            document.getElementById('audioBtn').textContent = musicEnabled ? '🎵 ON' : '🎵 OFF';
-            if (musicEnabled && gameState === 'playing') startMusic();
-            else stopMusic();
+            document.getElementById('musicBtn').click();
         }
         if (e.key === 's' || e.key === 'S') {
-            sfxEnabled = !sfxEnabled;
-            document.getElementById('sfxBtn').textContent = sfxEnabled ? '🔊 ON' : '🔊 OFF';
+            document.getElementById('sfxBtn').click();
         }
     });
     
