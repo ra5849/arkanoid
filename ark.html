@@ -1529,6 +1529,7 @@
             ctx.fillRect(paddle.x + 8, paddle.y + paddle.height - 3, paddle.width - 16, 3);
             ctx.shadowBlur = 0;
         }
+        if (IS_MOBILE) updatePaddleOverlay();
         
         balls.forEach(ball => {
             if (!ball.active) return;
