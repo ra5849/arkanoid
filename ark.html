@@ -360,6 +360,21 @@
         }
         
         #audioBtn:hover { border-color: #00f0ff; }
+        #sfxBtn {
+            position: fixed;
+            top: 60px;
+            right: 15px;
+            padding: 10px 15px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #444;
+            border-radius: 4px;
+            color: #00f0ff;
+            cursor: pointer;
+            z-index: 200;
+        }
+        #sfxBtn:hover { border-color: #00f0ff; }
         
         .boss-health {
             position: absolute;
@@ -493,8 +508,9 @@
             <div class="controls-info">
                 <span>← → MOVE</span>
                 <span>SPACE LAUNCH</span>
-                <span>M MUSIC</span>
-                <span>P PAUSE</span>
+        <span>M MUSIC</span>
+        <span>S SFX</span>
+        <span>P PAUSE</span>
             </div>
             <div class="powerup-legend">
                 <div class="title">POWERUPS</div>
@@ -531,7 +547,8 @@
             <button class="btn btn-danger" id="pauseMenuBtn" style="margin-top: 10px;">MENU</button>
         </div>
     </div>
-    <button id="audioBtn">🔊 ON</button>
+    <button id="audioBtn" title="Music">🎵 ON</button>
+    <button id="sfxBtn" title="Sound effects">🔊 ON</button>
     <button id="mobilePauseBtn">⏸</button>
 
     <script>
@@ -548,7 +565,9 @@
     
     let audioCtx = null;
     let musicEnabled = !IS_MOBILE;
-    document.getElementById('audioBtn').textContent = musicEnabled ? '🔊 ON' : '🔇 OFF';
+    let sfxEnabled = true;
+    document.getElementById('audioBtn').textContent = musicEnabled ? '🎵 ON' : '🎵 OFF';
+    document.getElementById('sfxBtn').textContent = sfxEnabled ? '🔊 ON' : '🔊 OFF';
     let musicInterval = null;
     let currentMusicNote = 0;
     let hardMode = false;
@@ -739,7 +758,7 @@
     }
     
     function playSound(freq, duration, type = 'square', volume = 0.15) {
-        if (!audioCtx || !musicEnabled) return;
+        if (!audioCtx || !sfxEnabled) return;
         try {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -800,9 +819,14 @@
     document.getElementById('audioBtn').addEventListener('click', () => {
         initAudio();
         musicEnabled = !musicEnabled;
-        document.getElementById('audioBtn').textContent = musicEnabled ? '🔊 ON' : '🔇 OFF';
+        document.getElementById('audioBtn').textContent = musicEnabled ? '🎵 ON' : '🎵 OFF';
         if (musicEnabled && gameState === 'playing') startMusic();
         else stopMusic();
+    });
+    
+    document.getElementById('sfxBtn').addEventListener('click', () => {
+        sfxEnabled = !sfxEnabled;
+        document.getElementById('sfxBtn').textContent = sfxEnabled ? '🔊 ON' : '🔊 OFF';
     });
     
     const brickColors = {
@@ -1708,9 +1732,13 @@
         if (e.key === 'm' || e.key === 'M') {
             initAudio();
             musicEnabled = !musicEnabled;
-            document.getElementById('audioBtn').textContent = musicEnabled ? '🔊 ON' : '🔇 OFF';
+            document.getElementById('audioBtn').textContent = musicEnabled ? '🎵 ON' : '🎵 OFF';
             if (musicEnabled && gameState === 'playing') startMusic();
             else stopMusic();
+        }
+        if (e.key === 's' || e.key === 'S') {
+            sfxEnabled = !sfxEnabled;
+            document.getElementById('sfxBtn').textContent = sfxEnabled ? '🔊 ON' : '🔊 OFF';
         }
     });
     
