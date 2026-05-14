@@ -69,6 +69,7 @@
             max-width: 100%;
             height: auto;
             touch-action: none;
+            image-rendering: pixelated;
             background: linear-gradient(180deg, #050510 0%, #0a0a20 30%, #050515 100%);
         }
         
@@ -530,7 +531,7 @@
     const CANVAS_HEIGHT = 700;
     
     let IS_MOBILE = window.innerWidth <= 600;
-    let renderScale = IS_MOBILE ? 0.35 : 1;
+    let renderScale = IS_MOBILE ? 0.25 : 1;
     canvas.width = CANVAS_WIDTH * renderScale;
     canvas.height = CANVAS_HEIGHT * renderScale;
     
@@ -647,7 +648,7 @@
     
     function resizeCanvas() {
         IS_MOBILE = window.innerWidth <= 600;
-        renderScale = IS_MOBILE ? 0.35 : 1;
+        renderScale = IS_MOBILE ? 0.25 : 1;
         canvas.width = CANVAS_WIDTH * renderScale;
         canvas.height = CANVAS_HEIGHT * renderScale;
         const vw = window.innerWidth;
@@ -1392,6 +1393,7 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         }
+        if (IS_MOBILE) { ctx.imageSmoothingEnabled = false; }
         
         bricks.forEach(brick => {
             if (!brick.alive) return;
