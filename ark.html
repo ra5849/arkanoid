@@ -70,7 +70,6 @@
         canvas {
             display: block;
             max-width: 100%;
-            height: auto;
             touch-action: none;
             background: linear-gradient(180deg, #050510 0%, #0a0a20 30%, #050515 100%);
         }
@@ -392,7 +391,6 @@
             .controls-info span { padding: 5px 8px; font-size: 8px; }
             .btn { padding: 10px 30px; font-size: 12px; }
             #mobilePauseBtn { display: block; }
-            #paddleOverlay { display: block; }
             .boss-health { width: 200px; }
             #startScreen, #gameOverScreen, #winScreen, #menuScreen, #pauseScreen {
                 position: fixed;
@@ -413,7 +411,6 @@
             }
         }
         #paddleOverlay {
-            display: none;
             position: absolute;
             top: 0;
             left: 0;
@@ -1529,7 +1526,7 @@
             ctx.fillRect(paddle.x + 8, paddle.y + paddle.height - 3, paddle.width - 16, 3);
             ctx.shadowBlur = 0;
         }
-        if (IS_MOBILE) updatePaddleOverlay();
+        updatePaddleOverlay();
         
         balls.forEach(ball => {
             if (!ball.active) return;
