@@ -390,6 +390,7 @@
             .controls-info span { padding: 5px 8px; font-size: 8px; }
             .btn { padding: 10px 30px; font-size: 12px; }
             #mobilePauseBtn { display: block; }
+            #paddleOverlay { display: block; }
             .boss-health { width: 200px; }
             #startScreen, #gameOverScreen, #winScreen, #menuScreen, #pauseScreen {
                 position: fixed;
@@ -408,6 +409,14 @@
                 font-size: 20px;
                 margin-bottom: 10px;
             }
+        }
+        #paddleOverlay {
+            display: none;
+            position: absolute;
+            z-index: 10;
+            pointer-events: none;
+            border-radius: 3px;
+            will-change: left, top, width;
         }
         #mobilePauseBtn {
             display: none;
@@ -445,6 +454,7 @@
     </div>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="1000" height="700"></canvas>
+        <div id="paddleOverlay"></div>
         <div class="boss-health"><div class="boss-health-bar" id="bossHealthBar"></div></div>
         
         <div id="ui">
@@ -587,6 +597,23 @@
     
     let highScores = [];
     try { highScores = JSON.parse(localStorage.getItem('arkHighScores')) || []; } catch(e) {}
+    
+    function updatePaddleOverlay() {
+        const overlay = document.getElementById('paddleOverlay');
+        if (!overlay) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = rect.width / CANVAS_WIDTH;
+        const scaleY = rect.height / CANVAS_HEIGHT;
+        overlay.style.left = Math.round(paddle.x * scaleX) + 'px';
+        overlay.style.top = Math.round(paddle.y * scaleY) + 'px';
+        overlay.style.width = Math.round(paddle.width * scaleX) + 'px';
+        overlay.style.height = Math.round(paddle.height * scaleY) + 'px';
+        let col = '#00f0ff';
+        if (paddle.effects.laser > 0) col = '#ff3333';
+        else if (paddle.effects.glue > 0) col = '#ff00ff';
+        else if (paddle.effects.break > 0) col = '#ff8800';
+        overlay.style.background = `linear-gradient(180deg, ${col}, ${shadeColor(col, -60)})`;
+    }
     
     const GITHUB_OWNER = 'ra5849';
     const GITHUB_REPO = 'arkanoid';
@@ -1481,8 +1508,7 @@
         else if (paddle.effects.break > 0) paddleColor = '#ff8800';
         
         if (IS_MOBILE) {
-            ctx.fillStyle = paddleColor;
-            ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+            updatePaddleOverlay();
         } else {
             const paddleGrad = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y + paddle.height);
             paddleGrad.addColorStop(0, paddleColor);
@@ -1671,6 +1697,7 @@
         const scale = CANVAS_WIDTH / rect.width;
         paddle.x = (e.clientX - rect.left) * scale - paddle.width / 2;
         paddle.x = Math.max(0, Math.min(CANVAS_WIDTH - paddle.width, paddle.x));
+        if (IS_MOBILE) updatePaddleOverlay();
     });
     
     canvas.addEventListener('click', () => {
@@ -1722,13 +1749,14 @@
         if (touch) {
             paddle.x = (touch.clientX - rect.left) * scale - paddle.width / 2;
             paddle.x = Math.max(0, Math.min(CANVAS_WIDTH - paddle.width, paddle.x));
+            updatePaddleOverlay();
         }
     }, { passive: false });
     
     updateRecords();
     createLevel(1);
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', () => { resizeCanvas(); if (IS_MOBILE) updatePaddleOverlay(); });
     draw();
     gameLoop();
     
