@@ -547,7 +547,8 @@
     let renderScale = 1;
     
     let audioCtx = null;
-    let musicEnabled = true;
+    let musicEnabled = !IS_MOBILE;
+    document.getElementById('audioBtn').textContent = musicEnabled ? '🔊 ON' : '🔇 OFF';
     let musicInterval = null;
     let currentMusicNote = 0;
     let hardMode = false;
@@ -1615,7 +1616,7 @@
     }
     
     function startGame(numPlayers, expert = false) {
-        initAudio();
+        if (musicEnabled) initAudio();
         players = numPlayers;
         hardMode = expert;
         currentPlayer = 1;
