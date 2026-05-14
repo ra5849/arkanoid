@@ -536,7 +536,7 @@
 
     <script>
     const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+    const ctx = canvas.getContext('2d');
     
     const CANVAS_WIDTH = 1000;
     const CANVAS_HEIGHT = 700;
@@ -1589,7 +1589,7 @@
     function gameLoop(timestamp) {
         if (gameState === 'playing' && !paused) {
             if (lastFrameTime === 0) { lastFrameTime = timestamp; accumulator = 0; }
-            const frameMs = Math.min(timestamp - lastFrameTime, 100);
+            const frameMs = Math.min(timestamp - lastFrameTime, 200);
             lastFrameTime = timestamp;
             accumulator += frameMs;
             while (accumulator >= 16.667) {
