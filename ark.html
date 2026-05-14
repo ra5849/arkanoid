@@ -18,6 +18,9 @@
             font-family: 'Orbitron', sans-serif;
             overflow: hidden;
             padding: 15px;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            user-select: none;
         }
         
         .title-container {
@@ -413,10 +416,12 @@
         #paddleOverlay {
             display: none;
             position: absolute;
+            top: 0;
+            left: 0;
             z-index: 10;
             pointer-events: none;
             border-radius: 3px;
-            will-change: left, top, width;
+            will-change: transform;
         }
         #mobilePauseBtn {
             display: none;
@@ -594,20 +599,24 @@
     
     let screenShake = 0;
     let screenFlash = 0;
+    let canvasRect = null;
     
     let highScores = [];
     try { highScores = JSON.parse(localStorage.getItem('arkHighScores')) || []; } catch(e) {}
     
+    function refreshCanvasRect() {
+        canvasRect = canvas.getBoundingClientRect();
+    }
+    
     function updatePaddleOverlay() {
         const overlay = document.getElementById('paddleOverlay');
         if (!overlay) return;
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = rect.width / CANVAS_WIDTH;
-        const scaleY = rect.height / CANVAS_HEIGHT;
-        overlay.style.left = Math.round(paddle.x * scaleX) + 'px';
-        overlay.style.top = Math.round(paddle.y * scaleY) + 'px';
-        overlay.style.width = Math.round(paddle.width * scaleX) + 'px';
-        overlay.style.height = Math.round(paddle.height * scaleY) + 'px';
+        const r = canvasRect || canvas.getBoundingClientRect();
+        const sx = r.width / CANVAS_WIDTH;
+        const sy = r.height / CANVAS_HEIGHT;
+        overlay.style.transform = `translate(${Math.round(paddle.x * sx)}px, ${Math.round(paddle.y * sy)}px)`;
+        overlay.style.width = Math.round(paddle.width * sx) + 'px';
+        overlay.style.height = Math.round(paddle.height * sy) + 'px';
         let col = '#00f0ff';
         if (paddle.effects.laser > 0) col = '#ff3333';
         else if (paddle.effects.glue > 0) col = '#ff00ff';
@@ -1400,6 +1409,7 @@
     }
     
     function draw() {
+        refreshCanvasRect();
         ctx.save();
         if (renderScale !== 1) ctx.scale(renderScale, renderScale);
         
@@ -1693,9 +1703,9 @@
     });
     
     canvas.addEventListener('mousemove', e => {
-        const rect = canvas.getBoundingClientRect();
-        const scale = CANVAS_WIDTH / rect.width;
-        paddle.x = (e.clientX - rect.left) * scale - paddle.width / 2;
+        if (!canvasRect) return;
+        const scale = CANVAS_WIDTH / canvasRect.width;
+        paddle.x = (e.clientX - canvasRect.left) * scale - paddle.width / 2;
         paddle.x = Math.max(0, Math.min(CANVAS_WIDTH - paddle.width, paddle.x));
         if (IS_MOBILE) updatePaddleOverlay();
     });
@@ -1738,25 +1748,22 @@
                 balls.forEach(ball => { if (!ball.launched) ball.launched = true; });
             }
         }
-    }, { passive: false });
+    }, { passive: true });
     
     document.addEventListener('touchmove', e => {
         if (gameState !== 'playing') return;
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const scale = CANVAS_WIDTH / rect.width;
         const touch = e.touches[0];
-        if (touch) {
-            paddle.x = (touch.clientX - rect.left) * scale - paddle.width / 2;
-            paddle.x = Math.max(0, Math.min(CANVAS_WIDTH - paddle.width, paddle.x));
-            updatePaddleOverlay();
-        }
-    }, { passive: false });
+        if (!touch || !canvasRect) return;
+        const scale = CANVAS_WIDTH / canvasRect.width;
+        paddle.x = (touch.clientX - canvasRect.left) * scale - paddle.width / 2;
+        paddle.x = Math.max(0, Math.min(CANVAS_WIDTH - paddle.width, paddle.x));
+        updatePaddleOverlay();
+    }, { passive: true });
     
     updateRecords();
     createLevel(1);
     resizeCanvas();
-    window.addEventListener('resize', () => { resizeCanvas(); if (IS_MOBILE) updatePaddleOverlay(); });
+    window.addEventListener('resize', () => { resizeCanvas(); refreshCanvasRect(); if (IS_MOBILE) updatePaddleOverlay(); });
     draw();
     gameLoop();
     
